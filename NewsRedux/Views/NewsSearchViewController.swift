@@ -11,11 +11,12 @@ import ReSwift
 import ReSwiftRouter
 import Kingfisher
 
-class NewsSearchViewController: UIViewController, UITableViewDataSource, UITableViewDelegate,
+class NewsSearchViewController: UIViewController, UISearchBarDelegate, UITableViewDataSource, UITableViewDelegate,
     StoreSubscriber, Routable  {
     static let identifier = "NewsSearch"
     
     @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var searchBar: UISearchBar!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     private let imageDimensionInPixels: CGFloat = 84
@@ -27,13 +28,14 @@ class NewsSearchViewController: UIViewController, UITableViewDataSource, UITable
         super.viewDidLoad()
         tableView.dataSource = self
         tableView.delegate = self
-        mainStore.dispatch(NewsActions.executeNewsSearch())
+        searchBar.delegate = self
+        //
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         mainStore.subscribe(self) {
-            $0.select { $0.newsState.display }
+            $0.select { $0.newsSearchState.display }
         }
     }
     
@@ -42,9 +44,15 @@ class NewsSearchViewController: UIViewController, UITableViewDataSource, UITable
         mainStore.unsubscribe(self)
     }
     
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        if let keywords = searchBar.text, !keywords.isEmpty {
+            mainStore.dispatch(NewsSearchActions.executeNewsSearch(keywords))
+        }
+    }
+    
     // MARK: StoreSubscriber
 
-    func newState(state: GetNewsResultDisplay) {
+    func newState(state: NewsSearchResultDisplay) {
         switch state {
         case .empty:
             activityIndicator.stopAnimating()
@@ -62,7 +70,7 @@ class NewsSearchViewController: UIViewController, UITableViewDataSource, UITable
                 let alert = UIAlertController(title: "Error?", message: "An error occurred", preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
                 present(alert, animated: true)
-                mainStore.dispatch(GetNewsResultErrorDisplayRequestCompleted())
+                mainStore.dispatch(NewsSearchResultErrorDisplayRequestCompleted())
             }
         case .results(let articles):
             activityIndicator.stopAnimating()
@@ -132,7 +140,7 @@ class NewsSearchViewController: UIViewController, UITableViewDataSource, UITable
     // MARK: UITableViewDelegate
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        var route = mainStore.state.navigationState.route
+        var route = mainStore.state.multiNavigationState.currentState.route
         route.append(NewsArticleDetailsViewController.identifier)
         // set the data to display on the details screen
         let cell = tableView.cellForRow(at: indexPath) as! NewsTableViewCell

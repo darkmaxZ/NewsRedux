@@ -11,25 +11,24 @@ import ReSwift
 import ReSwiftRouter
 
 class MainTabBarController: UITabBarController, Routable, StoreSubscriber {
-    private let newsViewController = UIStoryboard(name: "Main", bundle: nil)
-        .instantiateViewController(withIdentifier: "NewsViewController") as! NewsViewController
-    
     static let identifier = "TabBar"
     
+    private let topHeadlinesNavigationController = UIStoryboard(name: "Main", bundle: nil)
+        .instantiateViewController(withIdentifier: "TopHeadlinesNavigationController") as! TopHeadlinesNavigationController
+    private let newsSearchNavigationController = UIStoryboard(name: "Main", bundle: nil)
+        .instantiateViewController(withIdentifier: "NewsSearchNavigationController") as! NewsSearchNavigationController
     private var savedRoutes: [String: Route] = [:]
-       
-    // MARK: NSObject(UINibLoadingAdditions)
        
     override func awakeFromNib() {
         super.awakeFromNib()
-        delegate = self // need to intercept user taps and redirect to the router
+        delegate = self
            
         mainStore.subscribe(self) {
-            $0.select { $0.navigationState.route }
+            $0.select { $0.multiNavigationState.currentState.route }
         }
            
-        // save default routes per tab (NOTE: includes root identifier for each tab)
-        savedRoutes[NewsViewController.identifier] = [NewsViewController.identifier]
+        savedRoutes[TopHeadlinesNavigationController.identifier] = [TopHeadlinesNavigationController.identifier, TopHeadlinesViewController.identifier]
+        savedRoutes[NewsSearchNavigationController.identifier] = [NewsSearchNavigationController.identifier, NewsSearchViewController.identifier]
     }
     
     // MARK: StoreSubscriber
@@ -47,14 +46,18 @@ class MainTabBarController: UITabBarController, Routable, StoreSubscriber {
         setUpTabs()
         
         if routeElementIdentifier == MainTabBarController.identifier {
-            // dsletten: we are the initial route, set up from AppDelegate, so we can ignore this request
             completionHandler()
         }
         
-        if routeElementIdentifier == NewsViewController.identifier {
-            selectedViewController = newsViewController
+        if routeElementIdentifier == TopHeadlinesNavigationController.identifier {
+            selectedViewController = topHeadlinesNavigationController
             completionHandler()
-            return newsViewController
+            return topHeadlinesNavigationController
+        }
+        if routeElementIdentifier == NewsSearchNavigationController.identifier {
+            selectedViewController = newsSearchNavigationController
+            completionHandler()
+            return newsSearchNavigationController
         }
         
         return self
@@ -66,7 +69,7 @@ class MainTabBarController: UITabBarController, Routable, StoreSubscriber {
     }
     
     private func saveRelativeRoute() {
-        var currentRelativeRoute = mainStore.state.navigationState.route
+        var currentRelativeRoute = mainStore.state.multiNavigationState.currentState.route
         while currentRelativeRoute.count > 0 {
             let id = currentRelativeRoute.removeFirst()
             if (id == MainTabBarController.identifier) {
@@ -83,35 +86,40 @@ class MainTabBarController: UITabBarController, Routable, StoreSubscriber {
         
         print("MainTabBarController Routable change \(to)")
         
-        if to == NewsViewController.identifier {
-            selectedViewController = newsViewController
+        if to == TopHeadlinesNavigationController.identifier {
+            selectedViewController = topHeadlinesNavigationController
             completionHandler()
-            return newsViewController
+            return topHeadlinesNavigationController
+        }
+        if to == NewsSearchNavigationController.identifier {
+            selectedViewController = newsSearchNavigationController
+            completionHandler()
+            return newsSearchNavigationController
         }
         
         return self
     }
     
-    // MARK: Private
-    
     private func setUpTabs() {
         if (viewControllers?.count ?? 0) == 0 {
-            viewControllers = [newsViewController]
+            viewControllers = [topHeadlinesNavigationController, newsSearchNavigationController]
         }
     }
 }
 
 extension MainTabBarController: UITabBarControllerDelegate {
     func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
-        
-        // tab 1
-        if viewController is NewsViewController {
+        if viewController is TopHeadlinesNavigationController {
             let route: Route = [MainTabBarController.identifier]
-                + savedRoutes[NewsViewController.identifier]!
-            mainStore.dispatch(SetRouteAction(route))
+                + savedRoutes[TopHeadlinesNavigationController.identifier]!
+            mainStore.dispatch(SwitchRouteStackAction(routeStackName: TopHeadlinesNavigationController.identifier, route: route))
+        }
+        if viewController is NewsSearchNavigationController {
+            let route: Route = [MainTabBarController.identifier]
+                + savedRoutes[NewsSearchNavigationController.identifier]!
+            mainStore.dispatch(SwitchRouteStackAction(routeStackName: NewsSearchNavigationController.identifier, route: route))
         }
 
-        // don't let iOS change the selected tab by itself!! We must let our router do it for us lol!  ^__^ <- Dan
         return false
     }
 }

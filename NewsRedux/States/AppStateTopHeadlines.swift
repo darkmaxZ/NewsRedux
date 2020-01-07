@@ -1,5 +1,5 @@
 //
-//  AppStateNews.swift
+//  AppStateTopHeadlines.swift
 //  ReduxApp
 //
 //  Created by Ziurin, Maksim on 2019/12/24.
@@ -10,20 +10,19 @@ import Foundation
 
 // MARK: State Types
 
-struct GetNewsResult: Codable {
+struct GetTopHeadlinesResult: Codable {
     let status: String
     let totalResults: Int,
     articles: [Article]
 }
 
-enum ErrorDisplayRequest { case request, complete }
+enum ErrorDisplayTopHeadlinesRequest { case request, complete }
 
-enum GetNewsResultDisplay {
-    case empty, loading, error(ErrorDisplayRequest, Error), results([Article])
+enum GetTopHeadlinesResultDisplay {
+    case empty, loading, error(ErrorDisplayTopHeadlinesRequest, Error), results([Article])
 }
 
-struct NewsState {
-    var display: GetNewsResultDisplay
-    var searchQuery: String
+struct TopHeadlinesState {
+    var display: GetTopHeadlinesResultDisplay
 }
 

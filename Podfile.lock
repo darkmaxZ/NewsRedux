@@ -1,0 +1,35 @@
+PODS:
+  - Kingfisher (5.12.0):
+    - Kingfisher/Core (= 5.12.0)
+  - Kingfisher/Core (5.12.0)
+  - ReSwift (5.0.0)
+  - ReSwiftRouter (0.7.1):
+    - ReSwift (~> 5.0.0)
+  - ReSwiftThunk (1.2.0):
+    - ReSwift (~> 5.0)
+    - ReSwiftThunk/Core (= 1.2.0)
+  - ReSwiftThunk/Core (1.2.0):
+    - ReSwift (~> 5.0)
+
+DEPENDENCIES:
+  - Kingfisher
+  - ReSwift
+  - ReSwiftRouter
+  - ReSwiftThunk
+
+SPEC REPOS:
+  trunk:
+    - Kingfisher
+    - ReSwift
+    - ReSwiftRouter
+    - ReSwiftThunk
+
+SPEC CHECKSUMS:
+  Kingfisher: dc6e0f53bb5b12c3e75bedb0e01bbd7a640eea69
+  ReSwift: 628f1a9b3ee52e3b3ca2a644435472fd77afafe1
+  ReSwiftRouter: 916d8f940dbecc1d32dc1912b8f1891c7bcc7836
+  ReSwiftThunk: 23c8ea9092d9dc94b72005f19352dbd37fa42533
+
+PODFILE CHECKSUM: 884969122750b5c5ea2bf667402b39084842bd30
+
+COCOAPODS: 1.8.4

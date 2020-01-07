@@ -7,3 +7,22 @@
 //
 
 import Foundation
+
+// MARK: State Types
+
+struct NewsSearchResult: Codable {
+    let status: String
+    let totalResults: Int,
+    articles: [Article]
+}
+
+enum ErrorDisplayNewsSearchRequest { case request, complete }
+
+enum NewsSearchResultDisplay {
+    case empty, loading, error(ErrorDisplayNewsSearchRequest, Error), results([Article])
+}
+
+struct NewsSearchState {
+    var display: NewsSearchResultDisplay
+    var searchQuery: String
+}

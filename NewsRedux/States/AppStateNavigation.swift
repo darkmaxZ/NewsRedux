@@ -7,3 +7,9 @@
 //
 
 import Foundation
+import ReSwiftRouter
+
+struct MultiNavigationState {
+    var routeMap: [String: Route]
+    var currentState: NavigationState
+}

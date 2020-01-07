@@ -11,19 +11,19 @@ import ReSwift
 import ReSwiftRouter
 import ReSwiftThunk
 
-// MARK: Global App State Data Type
-
 struct AppState: StateType {
-    let newsState: NewsState
-    let navigationState: NavigationState
+    let topHeadlinesState: TopHeadlinesState
+    let newsSearchState: NewsSearchState
+    let multiNavigationState: MultiNavigationState
 }
 
 // MARK: App State Reducer
 
 fileprivate func appReducer(action: Action, state: AppState?) -> AppState {
     return AppState(
-        newsState: newsReducer(action, state: state?.newsState),
-        navigationState: NavigationReducer.handleAction(action, state: state?.navigationState)
+        topHeadlinesState: topHeadlinesReducer(action, state: state?.topHeadlinesState),
+        newsSearchState: newsSearchReducer(action, state: state?.newsSearchState),
+        multiNavigationState: multiNavigationReducer(action, state: state?.multiNavigationState)
     )
 }
 
@@ -37,21 +37,11 @@ let mainStore = Store<AppState>(
 
 var router: Router<AppState>!
 
-// MARK: AppStateCommon
-
 class AppStateCommon {
     static func setUpRouting(_ vc: Routable) {
-        // set up routing
         router = Router<AppState>(store: mainStore, rootRoutable: vc) { state in
-            state.select { $0.navigationState }
+            state.select { $0.multiNavigationState.currentState }
         }
-        
-        mainStore.dispatch { state, store in
-            if state.navigationState.route == [] {
-                return SetRouteAction([MainTabBarController.identifier, NewsViewController.identifier])
-            } else {
-                return nil
-            }
-        }
+        mainStore.dispatch(NavigationActions.executeSetupNavigation())
     }
 }

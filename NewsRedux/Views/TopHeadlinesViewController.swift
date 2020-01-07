@@ -1,5 +1,5 @@
 //
-//  NewsViewController.swift
+//  TopHeadlinesViewController.swift
 //  ReduxApp
 //
 //  Created by Ziurin, Maksim on 2019/12/24.
@@ -27,13 +27,14 @@ class TopHeadlinesViewController: UIViewController, UITableViewDataSource, UITab
         super.viewDidLoad()
         tableView.dataSource = self
         tableView.delegate = self
-        mainStore.dispatch(GetNewsActions.executeGetNews())
+        mainStore.dispatch(TopHeadlinesActions.executeGetTopHeadlines())
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        activityIndicator.startAnimating()
         mainStore.subscribe(self) {
-            $0.select { $0.newsState.display }
+            $0.select { $0.topHeadlinesState.display }
         }
     }
     
@@ -44,7 +45,7 @@ class TopHeadlinesViewController: UIViewController, UITableViewDataSource, UITab
     
     // MARK: StoreSubscriber
 
-    func newState(state: GetNewsResultDisplay) {
+    func newState(state: GetTopHeadlinesResultDisplay) {
         switch state {
         case .empty:
             activityIndicator.stopAnimating()
@@ -62,7 +63,7 @@ class TopHeadlinesViewController: UIViewController, UITableViewDataSource, UITab
                 let alert = UIAlertController(title: "Error?", message: "An error occurred", preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
                 present(alert, animated: true)
-                mainStore.dispatch(GetNewsResultErrorDisplayRequestCompleted())
+                mainStore.dispatch(GetTopHeadlinesResultErrorDisplayRequestCompleted())
             }
         case .results(let articles):
             activityIndicator.stopAnimating()
@@ -103,7 +104,7 @@ class TopHeadlinesViewController: UIViewController, UITableViewDataSource, UITab
         cell.articleTitle.attributedText = titleString
         
         if let resource = item.urlToImage {
-            cell.articleImage.kf.setImage(with: URL(string: resource), placeholder: UIImage(named: "placeholder"), options: nil, progressBlock: nil) { result in
+            cell.articleImage.kf.setImage(with: URL(string: resource), placeholder: UIImage(named: "placeholder")) { result in
                 switch result {
                 case .success(let value):
                     cell.articleImage.image = self.resizeImage(image: value.image)
@@ -112,14 +113,15 @@ class TopHeadlinesViewController: UIViewController, UITableViewDataSource, UITab
                 }
             }
         } else {
-            cell.articleImage.image = nil
+            cell.articleImage.image = UIImage(named: "placeholder")
         }
+        
+        cell.article = item
         
         return cell
     }
     
     func resizeImage(image: UIImage) -> UIImage {
-
         UIGraphicsBeginImageContext(CGSize(width: imageDimensionInPixels, height: imageDimensionInPixels))
         image.draw(in: CGRect(x: 0, y: 0, width: imageDimensionInPixels, height: imageDimensionInPixels))
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
@@ -131,9 +133,12 @@ class TopHeadlinesViewController: UIViewController, UITableViewDataSource, UITab
     // MARK: UITableViewDelegate
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        // jump to details screen
-        var route = mainStore.state.navigationState.route
+        var route = mainStore.state.multiNavigationState.currentState.route
         route.append(NewsArticleDetailsViewController.identifier)
+        // set the data to display on the details screen
+        let cell = tableView.cellForRow(at: indexPath) as! NewsTableViewCell
+        mainStore.dispatch(SetRouteSpecificData(route: route, data: cell.article!))
+        // jump to details screen
         mainStore.dispatch(SetRouteAction(route))
     }
 }
